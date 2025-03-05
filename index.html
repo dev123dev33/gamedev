@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>X1 qw2 Dasxz Terminal v2.5</title>
+  <style>
+    body {
+      background-color: #1e1e1e;
+      color: #00ff00;
+      font-family: monospace;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .terminal-container {
+      background-color: #000;
+      border: 1px solid #333;
+      width: 80%;
+      max-width: 800px;
+      padding: 20px;
+      box-shadow: 0 0 10px #000;
+    }
+    .terminal-header {
+      text-align: center;
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+    #output {
+      height: 300px;
+      overflow-y: auto;
+      border: 1px solid #333;
+      padding: 10px;
+      margin-bottom: 10px;
+      background-color: #111;
+      white-space: pre-wrap;
+    }
+    #command {
+      width: 100%;
+      border: none;
+      padding: 10px;
+      background-color: #000;
+      color: #00ff00;
+      font-size: 16px;
+      outline: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="terminal-container">
+    <div class="terminal-header">
+      X1 qw2 Dasxz Terminal v2.5<br>
+      <small>Credits: Hack dev realww</small>
+    </div>
+    <div id="output"></div>
+    <input type="text" id="command" placeholder="Masukkan perintah..." autofocus>
+  </div>
+  <script>
+    const commandInput = document.getElementById('command');
+    const outputDiv = document.getElementById('output');
+    const commandHistory = [];
+    let historyIndex = 0;
+    
+    commandInput.addEventListener('keydown', function(event) {
+      if (event.key === 'Enter') {
+        const command = commandInput.value.trim();
+        if (command) {
+          commandHistory.push(command);
+        }
+        processCommand(command);
+        commandInput.value = '';
+        historyIndex = commandHistory.length;
+      } 
+      else if (event.key === 'ArrowUp') {
+        if (commandHistory.length > 0 && historyIndex > 0) {
+          historyIndex--;
+          commandInput.value = commandHistory[historyIndex];
+        }
+        event.preventDefault();
+      } 
+      else if (event.key === 'ArrowDown') {
+        if (commandHistory.length > 0 && historyIndex < commandHistory.length - 1) {
+          historyIndex++;
+          commandInput.value = commandHistory[historyIndex];
+        } else {
+          historyIndex = commandHistory.length;
+          commandInput.value = '';
+        }
+        event.preventDefault();
+      }
+    });
+    
+    function processCommand(command) {
+      appendOutput('> ' + command);
+      
+      // Perintah dengan argumen:
+      if (command.toLowerCase().startsWith('echo ')) {
+        const textToEcho = command.substring(5);
+        appendOutput(textToEcho);
+      }
+      else if (command.toLowerCase().startsWith('calc ')) {
+        let expression = command.substring(5).trim();
+        // Ganti semua 'x' atau 'X' dengan '*'
+        expression = expression.replace(/x/gi, '*');
+        try {
+          const result = eval(expression);
+          appendOutput(result);
+        } catch (error) {
+          appendOutput('Error: Ekspresi tidak valid.');
+        }
+      }
+      else if (command.toLowerCase().startsWith('fact ')) {
+        const arg = command.substring(5).trim();
+        if (arg === '') {
+          appendOutput('Usage: fact [number]');
+        } else {
+          const num = parseInt(arg);
+          if (isNaN(num) || num < 0) {
+            appendOutput('Error: Masukkan bilangan bulat non-negatif.');
+          } else {
+            appendOutput(factorial(num));
+          }
+        }
+      }
+      else if (command.toLowerCase().startsWith('color ')) {
+        const arg = command.substring(6).trim();
+        if (arg === '') {
+          appendOutput('Usage: color [nama warna atau hex code]');
+        } else {
+          outputDiv.style.color = arg;
+          commandInput.style.color = arg;
+          appendOutput('Warna terminal telah diubah ke: ' + arg);
+        }
+      }
+      else if (command.toLowerCase().startsWith('reverse ')) {
+        const textToReverse = command.substring(8);
+        if (textToReverse === '') {
+          appendOutput('Usage: reverse [teks]');
+        } else {
+          const reversed = textToReverse.split('').reverse().join('');
+          appendOutput(reversed);
+        }
+      }
+      else if (command.toLowerCase().startsWith('upper ')) {
+        const text = command.substring(6);
+        if (text.trim() === '') {
+          appendOutput('Usage: upper [teks]');
+        } else {
+          appendOutput(text.toUpperCase());
+        }
+      }
+      else if (command.toLowerCase().startsWith('lower ')) {
+        const text = command.substring(6);
+        if (text.trim() === '') {
+          appendOutput('Usage: lower [teks]');
+        } else {
+          appendOutput(text.toLowerCase());
+        }
+      }
+      // Perintah baru: rand
+      else if (command.toLowerCase().startsWith('rand')) {
+        let args = command.substring(4).trim();
+        if (args === '') {
+          // Tidak ada argumen, hasilkan angka acak antara 1 dan 100
+          const randomNumber = Math.floor(Math.random() * 100) + 1;
+          appendOutput(randomNumber);
+        } else {
+          const parts = args.split(/\s+/);
+          if (parts.length === 1) {
+            const max = parseInt(parts[0]);
+            if (isNaN(max)) {
+              appendOutput('Usage: rand [min] [max]');
+            } else {
+              const randomNumber = Math.floor(Math.random() * max) + 1;
+              appendOutput(randomNumber);
+            }
+          } else if (parts.length >= 2) {
+            let min = parseInt(parts[0]);
+            let max = parseInt(parts[1]);
+            if (isNaN(min) || isNaN(max)) {
+              appendOutput('Usage: rand [min] [max]');
+            } else {
+              if (min > max) [min, max] = [max, min];
+              const randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
+              appendOutput(randomNumber);
+            }
+          }
+        }
+      }
+      // Perintah baru: palindrome
+      else if (command.toLowerCase().startsWith('palindrome ')) {
+        const text = command.substring(11).trim();
+        if (text === '') {
+          appendOutput('Usage: palindrome [teks]');
+        } else {
+          // Menghapus non-alphanumeric dan ubah ke huruf kecil
+          const processed = text.toLowerCase().replace(/[\W_]/g, '');
+          const reversed = processed.split('').reverse().join('');
+          if (processed === reversed) {
+            appendOutput("Yes, it's a palindrome.");
+          } else {
+            appendOutput("No, it's not a palindrome.");
+          }
+        }
+      }
+      else {
+        switch(command.toLowerCase()) {
+          case 'help':
+            appendOutput('Perintah yang tersedia: help, clear, cls, date, about, credits, banner, update, version, history, echo, calc, fact, clearhistory, color, reverse, upper, lower, rand, palindrome\nGunakan panah atas/bawah untuk navigasi riwayat perintah.');
+            break;
+          case 'clear':
+          case 'cls':
+            clearTerminal();
+            break;
+          case 'date':
+            appendOutput(new Date().toString());
+            break;
+          case 'about':
+            appendOutput('X1 qw2 Dasxz Terminal v2.5 - Pekerjaan sampingan dveeloper Hack dev realww');
+            break;
+          case 'credits':
+            appendOutput('Credits: Hack dev realww');
+            break;
+          case 'banner':
+            showBanner();
+            break;
+          case 'update':
+            clearTerminal();
+            appendOutput('Optimisasi dan pembersihan berhasil dilakukan.');
+            showBanner();
+            break;
+          case 'version':
+            appendOutput('Versi Terminal: v2.5');
+            break;
+          case 'history':
+            if (commandHistory.length > 0) {
+              appendOutput('Riwayat perintah:');
+              commandHistory.forEach(function(cmd, index) {
+                appendOutput((index + 1) + '. ' + cmd);
+              });
+            } else {
+              appendOutput('Tidak ada riwayat perintah.');
+            }
+            break;
+          case 'echo':
+            appendOutput('Usage: echo [teks]');
+            break;
+          case 'calc':
+            appendOutput('Usage: calc [ekspresi dengan x sebagai perkalian]');
+            break;
+          case 'fact':
+            appendOutput('Usage: fact [number]');
+            break;
+          case 'clearhistory':
+            commandHistory.length = 0;
+            appendOutput('Riwayat perintah telah dihapus.');
+            break;
+          default:
+            appendOutput('Perintah tidak dikenal: ' + command);
+        }
+      }
+      outputDiv.scrollTop = outputDiv.scrollHeight;
+    }
+    
+    // Fungsi untuk menghitung faktorial secara rekursif
+    function factorial(n) {
+      if (n === 0 || n === 1) return 1;
+      return n * factorial(n - 1);
+    }
+    
+    function appendOutput(text) {
+      const line = document.createElement('div');
+      line.textContent = text;
+      outputDiv.appendChild(line);
+    }
+    
+    function clearTerminal() {
+      outputDiv.innerHTML = '';
+    }
+    
+    function showBanner() {
+      appendOutput(
+`  ____  _   _   ____  __  __ 
+ / ___|| | | | / ___||  \\/  |
+ \\___ \\| | | | \\___ \\| |\\/| |
+  ___) | |_| |  ___) | |  | |
+ |____/ \\___/  |____/|_|  |_|`
+      );
+    }
+  </script>
+</body>
+</html>
